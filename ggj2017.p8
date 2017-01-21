@@ -51,8 +51,10 @@ function _update()
  --walk state
  if pstate==1 then
   if (b0) pdir=-1   
-  if (b1) pdir=1   
-  px+=pdir*min(pat,2)  
+  if (b1) pdir=1
+  xmove=pdir*min(pat,2)
+  px+=xmove
+  scrollscreen(xmove)
   pspr=flr(pat/2)%2+23
   if(not(b0 or b1))change_state(0)--go back to idle
   if(b2)change_state(3)--go to jump
@@ -63,8 +65,14 @@ function _update()
  if pstate==3 then
   pspr=21
   py-=6-pat
-  if (b0) px-=2
-  if (b1) px+=2
+  if (b0) then
+   px-=2
+   scrollscreen(-2)
+  end
+  if (b1) then
+   px+=2
+   scrollscreen(2)
+  end
   if (not b2 or pat>7) change_state(0) end
 
  
@@ -72,14 +80,30 @@ function _update()
  if pstate==2 then
   pspr=22
   if (canfall()) then
-   if (b0) px-=1
-   if (b1) px+=1
+   if (b0) then
+    px-=1
+    scrollscreen(-1)
+   end
+   if (b1) then
+    px+=1
+    scrollscreen(1)
+   end
    py+=min(4,pat) -- move the player
    if (not canfall()) py=flr(py/8)*8 -- check ground contact 
   else   
    py=flr(py/8)*8 -- fix position when we hit ground
    change_state(0)
   end
+ end
+end
+
+function scrollscreen(x)
+ if px > 63 then --scroll only midscreen-ish
+  camerax+=x
+  camera(camerax,0)
+ elseif px<=63 then
+  camerax = 0
+  camera(camerax,y)
  end
 end
 
