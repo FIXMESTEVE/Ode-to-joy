@@ -26,8 +26,10 @@ function _init()
  ephem={}
  score=0
  sequence={2,2,3,4,4,4,3,2,5,6,6,5,2,2,5,5,6,6}
+ issinging=false
 
  add_actors()
+ objectives=#actors
 end
 
 function _draw()
@@ -35,9 +37,12 @@ function _draw()
  --draw the world ‡
  map(camerax/8,0,camerax-camerax%8,0,17,17)
 
+
+
  foreach(actors, draw_actor)
 
  --draw the player
+ drawhud()
  spr(pspr,px,py,1,1,pdir==-1)
 
  --draw the attack
@@ -56,7 +61,7 @@ function _update()
  b1=btn(1)
  b2=btn(5) or btn(2)
  b4=btn(4)
-
+ wassinging = issinging
  pat+=1
 
  if(at>10 and at<20) then
@@ -88,13 +93,15 @@ function _update()
   aspr=221
  end
 
- --todo: camera stuff
-
  --idle state
  if pstate==0 then
   if b4 then
    pspr=36
-  else pspr=20
+   issinging=true
+  else 
+   pspr=20
+   sfx(-1, 3)
+   issinging=false
   end
   if(b0 or b1)change_state(1)
   if(canfall()) then change_state(2)
@@ -113,7 +120,10 @@ function _update()
   scrollscreen(xmove)
   if b4 then
    pspr=flr(pat/2)%2+39
+   issinging=true
   else 
+   issinging=false
+   sfx(-1, 3)
    pspr=flr(pat/2)%2+23
   end
   if(not(b0 or b1))change_state(0)--go back to idle
@@ -126,7 +136,14 @@ function _update()
 
   --jump state
  if pstate==3 then
-  if b4 then pspr=37 else pspr = 21 end
+  if b4 then 
+   pspr=37
+   issinging=true
+  else
+   pspr = 21 
+   issinging=false
+   sfx(-1, 3)
+  end
   py-=6-pat
   if (b0) then
    px-=2
@@ -141,7 +158,14 @@ function _update()
  
  -- fall state
  if pstate==2 then
-  if b4 then pspr=38 else pspr = 22 end
+  if b4 then 
+   issinging = true
+   pspr=38 
+  else
+   issinging=false
+   pspr = 22
+   sfx(-1, 3)
+  end
   if (canfall()) then
    if (b0) then
     px-=1
@@ -159,17 +183,39 @@ function _update()
   end
  end
 
+ if(not(wassinging)and issinging) then
+  sfx(1, 3)
+ elseif(wassinging and not (issinging)) then
+  sfx(-1, 3)
+ end
+
  foreach(actors, actor_behave)
  foreach(actors, actor_collide)
 end
 
 function scrollscreen(x)
- if px > 63 then --scroll only midscreen-ish
+ if px>=65*8 then
+  camerax=57*8    
+  camera(camerax,y)
+ elseif px > 63 then --scroll only midscreen-ish
   camerax+=x
   camera(camerax,0)
  elseif px<=63 then
   camerax = 0
   camera(camerax,y)
+   
+ end
+end
+
+function drawhud()
+ if(score < objectives) then
+  spr(48,camerax+128-8*3,128-(8*2)+1,1,1)
+  print("sing(w) to cheer up sad do", camerax, 128-(6*2))
+
+  spr(45,camerax+128-8*3,128-(8*1),1,1)
+  print("jump(x) and get the notes", camerax, 128-(6*1))
+ else
+  print(" thank you for playing ‡", camerax, 128-(6*2))
  end
 end
 
@@ -253,6 +299,7 @@ function actor_collide(a)
      sfx(7)
      a.type=32
      make_twinkle(a.x+8,a.y-8, 4, 52)
+     score += 1 
     end
    end
   end
@@ -269,7 +316,7 @@ function actor_collide(a)
     a.type = 0
     a.alive = false
     make_twinkle(a.x, a.y, 4, 9)
-    score += 2  
+    score += 1  
    end
   end
  end
@@ -548,7 +595,7 @@ __map__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
 0109000030241302063030134301343013230130301343013430132301353013730139301393013b3013c3012e3012c3012a3012a3012a3012a301170000f000170000f0000d000170000f000160000f0000d000
-010d00003454234502345423450235542305023754237542325023754230502355423050234542345023254230502305423050230542305023254234502345423454230502325423254230502305423054230502
+010d00203454234502345423450235542305023754237542325023754230502355423050234542345023254230502305423050230542305023254234502345423454230502325423254230502305423054230502
 011000001c3401c3452350015500135002a5002b5002d5002f5003150033500227002d70032700000002f5000000000000235002d500000000000000000000001f70021700237002570026700237001f70000000
 011000001d3401d3452350015500135002a5002b5002d5002f5003150033500227002d70032700000002f5000000000000235002d500000000000000000000001f70021700237002570026700237001f70000000
 011000001f3401f345305053250500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
